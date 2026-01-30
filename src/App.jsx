@@ -15,16 +15,58 @@ import {
 
 // --- CONFIG ---
 import { auth, db } from './firebase'; 
-// Pastikan file UTBKStudentApp.jsx ada di folder yang sama (file ujian lama kamu)
-import UTBKStudentApp from './UTBKStudentApp'; 
 
-const EXAM_APP_URL = "https://ujian.liezira.com"; 
+// ==========================================
+// FIX #4: TEMPORARY PLACEHOLDER FOR EXAM
+// ==========================================
+// OPTION A: Jika Anda sudah punya file UTBKStudentApp.jsx
+//           → Uncomment line berikut & comment Placeholder component
+// import UTBKStudentApp from './UTBKStudentApp'; 
+
+// OPTION B: Jika belum punya, gunakan placeholder dulu
+// const UTBKStudentApp = ({ prefilledToken, onExamComplete }) => {
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center p-8">
+//       <div className="bg-white rounded-3xl p-8 max-w-2xl text-center shadow-2xl">
+//         <div className="w-20 h-20 bg-yellow-400 rounded-full mx-auto mb-6 flex items-center justify-center">
+//           <AlertTriangle size={40} className="text-yellow-900"/>
+//         </div>
+//         <h1 className="text-3xl font-bold text-gray-800 mb-4">
+//           Exam Module Coming Soon
+//         </h1>
+//         <p className="text-gray-600 mb-6">
+//           File <code className="bg-gray-100 px-2 py-1 rounded">UTBKStudentApp.jsx</code> belum tersedia.
+//         </p>
+//         <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6 text-left">
+//           <p className="text-sm text-indigo-900 font-semibold mb-2">Token Anda:</p>
+//           <p className="font-mono text-2xl text-indigo-600 font-black">{prefilledToken}</p>
+//         </div>
+//         <p className="text-sm text-gray-500 mb-6">
+//           Untuk sementara, Anda bisa menggunakan token ini di halaman ujian terpisah.
+//         </p>
+//         <button 
+//           onClick={onExamComplete}
+//           className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition"
+//         >
+//           Kembali ke Dashboard
+//         </button>
+//       </div>
+//     </div>
+//   );
+// };
+
+// ==========================================
+// REST OF THE CODE TETAP SAMA
+// (AuthenticationScreen, PackageSelection, PaymentModal, StudentDashboard, App)
+// ==========================================
+
+const EXAM_APP_URL = "https://utbk-simulation-tester-student.vercel.app/"; 
 
 // ==========================================
 // 1. KOMPONEN: AUTHENTICATION SCREEN
 // ==========================================
 const AuthenticationScreen = ({ onAuthSuccess }) => {
-  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [mode, setMode] = useState('login'); 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '', displayName: '', school: '' });
 
@@ -39,7 +81,6 @@ const AuthenticationScreen = ({ onAuthSuccess }) => {
         if (!formData.displayName || !formData.school) throw new Error("Nama dan Sekolah wajib diisi");
         const cred = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         await updateProfile(cred.user, { displayName: formData.displayName });
-        // Simpan data user awal
         await setDoc(doc(db, 'users', cred.user.uid), {
           email: formData.email,
           displayName: formData.displayName,
@@ -102,7 +143,6 @@ const PackageSelection = ({ user, onClose, onPaymentInitiated }) => {
     setLoading(true);
     try {
       const idToken = await user.getIdToken();
-      // Panggil API Vercel
       const res = await fetch('/api/createPayment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
@@ -177,12 +217,9 @@ const StudentDashboard = ({ user, onLogout, onStartExam, onBuyCredits }) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    // Listen Credits
-    const unsubUser = onSnapshot(doc(db, 'users', user.uid), (doc) => {
-      setCredits(doc.data()?.credits || 0);
+    const unsubUser = onSnapshot(doc(db, 'users', user.uid), (snap) => {
+      if (snap.exists()) setCredits(snap.data().credits || 0);
     });
-    // Listen Tokens
     const qToken = query(collection(db, 'tokens'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
     const unsubToken = onSnapshot(qToken, (snap) => {
       setTokens(snap.docs.map(d => ({id: d.id, ...d.data()})));
@@ -197,7 +234,6 @@ const StudentDashboard = ({ user, onLogout, onStartExam, onBuyCredits }) => {
     setIsGenerating(true);
     try {
       const idToken = await user.getIdToken();
-      // Panggil API Vercel
       const res = await fetch('/api/generateToken', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` }
@@ -219,7 +255,6 @@ const StudentDashboard = ({ user, onLogout, onStartExam, onBuyCredits }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
       <div className="bg-indigo-600 text-white p-8 pb-16 rounded-b-[2.5rem] shadow-xl">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <div>
@@ -231,7 +266,6 @@ const StudentDashboard = ({ user, onLogout, onStartExam, onBuyCredits }) => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 -mt-10 space-y-6">
-        {/* Credit Card */}
         <div className="bg-white rounded-3xl p-6 shadow-xl flex justify-between items-center border border-gray-100">
           <div>
             <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">Sisa Credit</p>
@@ -242,7 +276,6 @@ const StudentDashboard = ({ user, onLogout, onStartExam, onBuyCredits }) => {
           </button>
         </div>
 
-        {/* Generate Action */}
         <div className="bg-indigo-50 border border-indigo-100 rounded-3xl p-6 text-center">
           <h3 className="font-bold text-indigo-900 mb-2">Mulai Simulasi Baru</h3>
           <p className="text-indigo-600/70 text-sm mb-4">Gunakan 1 credit untuk mendapatkan token ujian.</p>
@@ -252,7 +285,6 @@ const StudentDashboard = ({ user, onLogout, onStartExam, onBuyCredits }) => {
           </button>
         </div>
 
-        {/* Token History */}
         <div>
           <h3 className="font-bold text-gray-700 mb-4 flex items-center gap-2"><History size={20}/> Riwayat Token</h3>
           <div className="space-y-3">
@@ -286,7 +318,7 @@ const StudentDashboard = ({ user, onLogout, onStartExam, onBuyCredits }) => {
 const App = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('auth'); // 'auth' | 'dashboard' | 'exam'
+  const [view, setView] = useState('auth');
   const [examToken, setExamToken] = useState(null);
   
   const [showPackageModal, setShowPackageModal] = useState(false);
@@ -311,12 +343,10 @@ const App = () => {
 
   return (
     <>
-      {/* 1. VIEW: AUTH */}
       {view === 'auth' && (
         <AuthenticationScreen onAuthSuccess={() => setView('dashboard')} />
       )}
 
-      {/* 2. VIEW: DASHBOARD */}
       {view === 'dashboard' && user && (
         <StudentDashboard 
           user={user} 
@@ -326,7 +356,6 @@ const App = () => {
         />
       )}
 
-      {/* 3. VIEW: EXAM APP */}
       {view === 'exam' && examToken && (
         <UTBKStudentApp 
           prefilledToken={examToken} 
@@ -334,7 +363,6 @@ const App = () => {
         />
       )}
 
-      {/* MODALS */}
       {showPackageModal && (
         <PackageSelection 
           user={user} 
