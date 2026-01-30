@@ -142,7 +142,7 @@ const App = () => {
           <div className="max-w-6xl mx-auto px-4 text-center">
             <div className="flex justify-center items-center gap-2 mb-4 opacity-50">
               <Brain size={24} />
-              <span className="font-bold text-xl">RuangSimulasi</span>
+              <span className="font-bold text-xl tracking-tight text-gray-900">Ruang<span className="text-indigo-600">Simulasi</span></span>
             </div>
             <p className="text-gray-400 text-sm mb-6">Platform Simulasi UTBK SNBT Paling Akurat & Terpercaya.</p>
             <p className="text-gray-300 text-xs">© {new Date().getFullYear()} Liezira.Tech All rights reserved.</p>
@@ -203,7 +203,7 @@ const LandingPage = ({ onBuy, onLogin }) => {
       <section id="features" className="py-24 px-4 bg-white relative">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Kenapa Harus Ruang Simulasi?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Kenapa Harus <span className="font-bold text-xl tracking-tight text-gray-900">Ruang<span className="text-indigo-600">Simulasi?</span></span></h2>
             <p className="text-gray-500 max-w-2xl mx-auto">Pengalaman ujian yang sesungguhnya agar kamu tidak kaget di hari H.</p>
           </div>
 
