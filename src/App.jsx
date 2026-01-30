@@ -145,7 +145,7 @@ const App = () => {
               <span className="font-bold text-xl tracking-tight text-gray-900">Ruang<span className="text-indigo-600">Simulasi</span></span>
             </div>
             <p className="text-gray-400 text-sm mb-6">Platform Simulasi UTBK SNBT Paling Akurat & Terpercaya.</p>
-            <p className="text-gray-300 text-xs">© {new Date().getFullYear()} Liezira.Tech All rights reserved.</p>
+            <p className="text-gray-300 text-xs">© {new Date().getFullYear()} LieziraGroup All rights reserved.</p>
           </div>
         </footer>
       )}
@@ -333,32 +333,31 @@ const StudentDashboard = ({ user, autoOpenPayment, clearPending }) => {
 
     setIsGenerating(true);
     try {
-      const newTokenCode = `UTBK-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-      const userRef = doc(db, 'users', user.uid);
-      const tokenRef = doc(db, 'tokens', newTokenCode);
+      const idToken = await user.getIdToken();
 
-      await runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userRef);
-        const currentCredits = userDoc.data().credits || 0;
-        if (currentCredits < 1) throw "Saldo habis!";
-        
-        transaction.update(userRef, { credits: currentCredits - 1 });
-        transaction.set(tokenRef, {
-          tokenCode: newTokenCode,
-          studentName: user.displayName,
-          studentEmail: user.email,
-          studentPhone: '-',
-          status: 'active',
-          createdAt: new Date().toISOString(),
-          isSent: false,
-          sentMethod: 'Self-Generated',
-          score: null,
-          createdBy: 'STUDENT'
-        });
-      });
-      alert("Token Berhasil Dibuat!");
-    } catch (error) { alert("Gagal: " + error); } finally { setIsGenerating(false); }
-  };
+    // Panggil API Vercel yang baru kita buat
+    const response = await fetch('/api/generateToken', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}` // Kirim token keamanan
+      }
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      alert(`✅ Token: ${result.tokenCode}`);
+      loadUserData(); // Refresh dashboard
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    alert('Gagal: ' + error.message);
+  } finally {
+    setGeneratingToken(false);
+  }
+};
 
   const handlePaymentMockup = (plan) => {
     alert(`[MOCKUP] Midtrans Payment: ${plan.name} (Rp ${plan.price})`);
