@@ -14,7 +14,7 @@ import {
   ChevronRight, CheckCircle, Star, MessageCircle, 
   ArrowRight, Menu, X, Phone, Mail, Users, Award, Target,
   LogOut, Plus, History, Loader2, Ticket, Copy, Instagram, Facebook, Twitter,
-  ExternalLink // <--- Icon Baru untuk Link Ujian
+  ExternalLink 
 } from 'lucide-react';
 
 // ==========================================
@@ -58,7 +58,6 @@ const Dashboard = ({ user }) => {
     navigate('/');
   };
 
-  // Logic Generate Token
   const handleGenerateToken = async () => {
     const credits = userData?.credits || 0;
     if (credits < 1) {
@@ -103,7 +102,7 @@ const Dashboard = ({ user }) => {
           sentMethod: 'DASHBOARD_GENERATE'
         });
       });
-      alert("Token berhasil dibuat! Silakan klik 'Mulai Ujian' di bawah.");
+      alert("Token berhasil dibuat!");
     } catch (error) {
       alert("Gagal membuat token: " + error);
     } finally {
@@ -111,13 +110,14 @@ const Dashboard = ({ user }) => {
     }
   };
 
-  // --- FUNGSI BARU: AUTO COPY & BUKA LINK ---
+  // --- LOGIC AUTO FILL URL ---
   const handleStartExam = (tokenCode) => {
-    // 1. Copy Token ke Clipboard
+    // 1. Copy Token ke Clipboard (Backup)
     navigator.clipboard.writeText(tokenCode);
     
-    // 2. Buka Link Ujian di Tab Baru
-    window.open(EXAM_URL, '_blank');
+    // 2. Buka Link dengan Parameter Token (?token=...)
+    // Pastikan website ujianmu diprogram untuk membaca parameter ini
+    window.open(`${EXAM_URL}?token=${tokenCode}`, '_blank');
   };
   
   return (
@@ -127,7 +127,12 @@ const Dashboard = ({ user }) => {
       <div className="bg-indigo-600 text-white p-8 pb-16 rounded-b-[2.5rem] shadow-xl">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-             <img src="/LogoRuangSimulasi.svg" alt="Logo" className="w-28 h-28 object-contain drop-shadow-lg" />
+             <img 
+                src="/LogoRuangSimulasi.svg" 
+                alt="Logo" 
+                className="w-28 h-28 object-contain drop-shadow-lg bg-white/95 backdrop-blur-sm p-3 rounded-2xl shadow-xl ring-1 ring-white/50" 
+             />
+             
              <div>
                 <h1 className="text-2xl font-bold">Halo, {userData?.displayName?.split(' ')[0] || 'Siswa'} 👋</h1>
                 <p className="text-indigo-200 text-sm mt-1">Siap untuk simulasi hari ini?</p>
@@ -188,7 +193,6 @@ const Dashboard = ({ user }) => {
                 {/* Tombol Aksi */}
                 <div className="flex items-center gap-2 w-full md:w-auto">
                   
-                  {/* Tombol Copy Biasa */}
                   <button 
                     onClick={() => {navigator.clipboard.writeText(t.tokenCode); alert("Token disalin!")}} 
                     className="p-2 border rounded-lg hover:bg-gray-50 text-gray-500" 
@@ -197,7 +201,7 @@ const Dashboard = ({ user }) => {
                     <Copy size={18}/>
                   </button>
 
-                  {/* Tombol Mulai Ujian (Hanya jika aktif) */}
+                  {/* Tombol Mulai Ujian (Auto Fill) */}
                   {t.status === 'active' ? (
                     <button 
                       onClick={() => handleStartExam(t.tokenCode)}
@@ -231,11 +235,11 @@ const Dashboard = ({ user }) => {
 // ==========================================
 const LandingPageContent = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeFaq, setActiveFaq] = useState(null);
   const navigate = useNavigate();
 
   const handleAuth = () => navigate('/signup'); 
 
+  // --- Static Data ---
   const features = [
     { icon: <Brain className="w-8 h-8" />, title: "Soal Berkualitas Tinggi", description: "Ribuan soal berkualitas yang disusun oleh tim expert sesuai kisi-kisi UTBK terbaru.", color: "from-blue-500 to-cyan-500" },
     { icon: <BarChart3 className="w-8 h-8" />, title: "Analisis Performa", description: "Setiap simulasi langsung dipecah: subtest lemah, waktu terbuang, dan potensi naik skor.", color: "from-purple-500 to-pink-500" },
@@ -273,6 +277,9 @@ const LandingPageContent = () => {
     { number: "4.9/5", label: "Rating Pengguna", icon: <Star /> },
     { number: "95%", label: "Tingkat Kepuasan", icon: <Target /> }
   ];
+
+  // State untuk FAQ Accordion
+  const [activeFaq, setActiveFaq] = useState(null);
 
   return (
     <div className="min-h-screen bg-white">
@@ -340,7 +347,7 @@ const LandingPageContent = () => {
         </div>
       </section>
 
-      {/* Other Sections (Features, Pricing, etc) - No Changes Needed but included for completeness */}
+      {/* Features Section */}
       <section id="features" className="py-16 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
@@ -359,6 +366,7 @@ const LandingPageContent = () => {
         </div>
       </section>
 
+      {/* Pricing Section */}
       <section id="pricing" className="py-16 md:py-20 bg-gradient-to-br from-gray-50 to-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
@@ -497,9 +505,15 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Route: Landing Page (Public) */}
         <Route path="/" element={!user ? <LandingPageContent /> : <Navigate to="/dashboard" />} />
+        
+        {/* Route: SignUp/Login (Public) */}
         <Route path="/signup" element={!user ? <SignUpPages /> : <Navigate to="/dashboard" />} />
+        
+        {/* Route: Dashboard Siswa (Private/Protected) */}
         <Route path="/dashboard" element={user ? <Dashboard user={user} /> : <Navigate to="/signup" />} />
+        
       </Routes>
     </Router>
   );
