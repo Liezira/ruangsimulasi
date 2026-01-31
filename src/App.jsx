@@ -126,10 +126,7 @@ const Dashboard = ({ user }) => {
       <div className="bg-indigo-600 text-white p-8 pb-16 rounded-b-[2.5rem] shadow-xl">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
-             {/* LOGO GAMBAR DI DASHBOARD (SUDAH DIPERBAIKI) */}
-             <div className="bg-white p-1.5 rounded-lg shadow-sm">
-                <img src="/LogoRuangSimulasi.svg" alt="Logo" className="w-8 h-8" />
-             </div>
+                <img src="/LogoRuangSimulasi.svg" alt="Logo" className="w-8 h-8" /></img>
              <div>
                 <h1 className="text-xl font-bold">Halo, {userData?.displayName?.split(' ')[0] || 'Siswa'} 👋</h1>
                 <p className="text-indigo-200 text-xs mt-0.5">Siap untuk tryout hari ini?</p>
