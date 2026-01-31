@@ -290,12 +290,12 @@ const LandingPage = ({ onGetStarted, onLogin }) => {
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Pilih paket yang sesuai dengan kebutuhanmu. Semakin banyak, semakin hemat!
             </p>
-          </div>
             <p className="text-sm md:text-base text-gray-500 mt-4 max-w-xl mx-auto">
               Semua paket memiliki <span className="font-semibold text-gray-700">fitur yang sama</span>.
               Perbedaannya hanya pada <span className="font-semibold text-gray-700">jumlah token (kesempatan latihan)</span>.
               Semakin sering latihan, semakin matang strategi dan mentalmu.
             </p>
+          </div>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {packages.map((pkg, idx) => (
               <div 
@@ -344,7 +344,7 @@ const LandingPage = ({ onGetStarted, onLogin }) => {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="text-lg font-bold text-indigo-600 mb-3">
                     {pkg.credits} Credits
                   </div>
