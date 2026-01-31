@@ -49,11 +49,9 @@ const LandingPage = ({ onGetStarted, onLogin }) => {
     }
   ];
 
-  // Data Packages (Optimized for UI & Conversion)
-const packages = [
-  {
-    id: 'pkg_hemat',
-    name: 'Paket Hemat',
+  const packages = [
+    {
+      name: 'Paket Hemat',
     subtitle: 'Coba dulu sebelum serius',
     credits: 1,
     price: 10000,
@@ -66,15 +64,11 @@ const packages = [
       'Analisis Nilai Dasar',
       'Akses Leaderboard'
     ],
-    active: true,
-    displayOrder: 1,
-    color: 'from-blue-500 to-cyan-500',
-    ctaText: 'Coba Sekarang',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'pkg_pejuang',
-    name: 'Paket Pejuang',
+      color: "from-blue-500 to-cyan-500",
+      popular: false
+    },
+    {
+      name: 'Paket Pejuang',
     subtitle: 'Paling seimbang & paling dipilih',
     credits: 3,
     price: 25000,
@@ -87,16 +81,11 @@ const packages = [
       'Analisis Nilai & Ranking Akurat',
       'Leaderboard Nasional'
     ],
-    active: true,
-    displayOrder: 2,
-    color: 'from-purple-600 to-pink-600',
-    best: true,
-    ctaText: 'Mulai Sekarang 🚀',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'pkg_sultan',
-    name: 'Paket Sultan',
+      color: "from-purple-500 to-pink-500",
+      popular: true
+    },
+    {
+      name: 'Paket Sultan',
     subtitle: 'Paling hemat untuk pejuang serius',
     credits: 10,
     price: 75000,
@@ -109,14 +98,10 @@ const packages = [
       'Analisis Lengkap & Riwayat',
       'Leaderboard Nasional'
     ],
-    active: true,
-    displayOrder: 3,
-    color: 'from-orange-500 to-red-500',
-    ctaText: 'Gas Pol 🚀',
-    createdAt: new Date().toISOString()
-  }
-];
-
+      color: "from-orange-500 to-red-500",
+      popular: false
+    }
+  ];
 
   const testimonials = [
     {
