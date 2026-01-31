@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, orderBy } from 'firebase/firestore';
 import { auth, db } from './firebase'; 
 
 // --- COMPONENTS ---
@@ -12,20 +12,21 @@ import PackageSelection from './PackageSelection';
 import { 
   Brain, Zap, Trophy, BarChart3, Shield, Clock, 
   ChevronRight, CheckCircle, Star, MessageCircle, 
-  ArrowRight, Menu, X, Phone, Mail, MapPin, Instagram, 
-  Facebook, Twitter, Award, Users, Target, TrendingUp,
-  LogOut, Plus, History // Icon tambahan untuk Dashboard
+  ArrowRight, Menu, X, Phone, Mail, Users, Award, Target,
+  LogOut, Plus, History, Loader2, Ticket, Copy, Instagram, Facebook, Twitter
 } from 'lucide-react';
 
 // ==========================================
-// 1. DASHBOARD COMPONENT (Private Area)
+// 1. DASHBOARD COMPONENT (Desain Original)
 // ==========================================
 const Dashboard = ({ user }) => {
   const [userData, setUserData] = useState(null);
+  const [tokens, setTokens] = useState([]);
   const [showPackageModal, setShowPackageModal] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
 
-  // Ambil Data User Realtime
+  // 1. Ambil Data User (Credits & Profile)
   useEffect(() => {
     if (!user) return;
     const unsub = onSnapshot(doc(db, 'users', user.uid), (doc) => {
@@ -34,81 +35,131 @@ const Dashboard = ({ user }) => {
     return () => unsub();
   }, [user]);
 
+  // 2. Ambil Riwayat Token
+  useEffect(() => {
+    if (!user) return;
+    const q = query(
+      collection(db, 'tokens'), 
+      where('studentPhone', '==', user.email), // Asumsi sementara mapping via email/phone
+      orderBy('createdAt', 'desc')
+    );
+    // Note: Jika query error index, sementara skip dulu logic token list
+  }, [user]);
+
   const handleLogout = async () => {
     await signOut(auth);
     navigate('/');
   };
 
-  const handleGenerateToken = () => {
-    // Cek saldo credit
-    if ((userData?.credits || 0) < 1) {
-        alert("Credit tidak cukup! Silakan beli credit terlebih dahulu.");
+  const handleGenerateToken = async () => {
+    const credits = userData?.credits || 0;
+    
+    if (credits < 1) {
+        // Tampilkan Modal Top Up jika credit kurang
         setShowPackageModal(true);
         return;
     }
-    // Logic generate token (sementara alert dulu)
-    alert("Hubungi Admin untuk menukar Credit dengan Token Ujian.");
+
+    if (!confirm("Gunakan 1 Credit untuk token ujian?")) return;
+
+    setIsGenerating(true);
+    // Simulasi Generate Token (Nanti diganti Cloud Function)
+    setTimeout(() => {
+        alert("Permintaan token diterima. Hubungi Admin untuk validasi sementara.");
+        setIsGenerating(false);
+    }, 1000);
+  };
+
+  const handleBuyCredits = () => {
+    setShowPackageModal(true);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      {/* Navbar Dashboard */}
-      <nav className="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-40 shadow-sm">
-        <div className="flex items-center gap-2">
-           {/* Logo Gambar di Dashboard */}
-           <img src="/LogoRuangSimulasi.svg" alt="Logo" className="w-10 h-10" />
-           <span className="font-bold text-xl text-gray-800">RuangSimulasi</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden md:block text-right">
-            <div className="text-sm font-bold text-gray-800">{userData?.displayName || user.email}</div>
-            <div className="text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full inline-block">Siswa</div>
+    <div className="min-h-screen bg-gray-50 pb-20 font-sans">
+      
+      {/* --- HEADER MELENGKUNG (Desain Asli) --- */}
+      <div className="bg-indigo-600 text-white p-8 pb-16 rounded-b-[2.5rem] shadow-xl">
+        <div className="max-w-4xl mx-auto flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              Halo, {userData?.displayName?.split(' ')[0] || 'Siswa'} 👋
+            </h1>
+            <p className="text-indigo-200 text-sm mt-1">Siap untuk tryout hari ini?</p>
           </div>
-          <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition" title="Keluar"><LogOut size={20}/></button>
-        </div>
-      </nav>
-
-      <div className="max-w-5xl mx-auto p-6 space-y-8">
-        {/* Banner Saldo */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
-          <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">Halo, {userData?.displayName?.split(' ')[0] || 'Pejuang'}! 👋</h2>
-              <p className="text-indigo-100">Siap untuk simulasi hari ini?</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/20 flex items-center gap-6">
-              <div>
-                <p className="text-xs text-indigo-200 uppercase font-bold tracking-wider">Sisa Credit</p>
-                <p className="text-4xl font-black">{userData?.credits || 0}</p>
-              </div>
-              <button onClick={() => setShowPackageModal(true)} className="bg-white text-indigo-700 px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-50 transition flex items-center gap-2 transform hover:scale-105">
-                <Plus size={18}/> Beli Credit
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Menu Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-indigo-200 transition group">
-            <h3 className="font-bold text-xl text-gray-800 mb-3 flex items-center gap-2"><Zap className="text-yellow-500"/> Mulai Ujian</h3>
-            <p className="text-gray-500 text-sm mb-8 leading-relaxed">Gunakan 1 credit untuk mendapatkan token ujian Tryout UTBK Fullset (7 Subtes).</p>
-            <button onClick={handleGenerateToken} className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg flex justify-center items-center gap-2">
-              Generate Token
-            </button>
-          </div>
-
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h3 className="font-bold text-xl text-gray-800 mb-3 flex items-center gap-2"><History className="text-blue-500"/> Riwayat Token</h3>
-            <div className="h-32 flex flex-col items-center justify-center text-gray-400 text-sm italic bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-              <History size={24} className="mb-2 opacity-50"/>
-              Belum ada riwayat ujian.
-            </div>
-          </div>
+          <button 
+            onClick={handleLogout} 
+            className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition text-white"
+            title="Keluar"
+          >
+            <LogOut size={20}/>
+          </button>
         </div>
       </div>
 
-      {/* Modal Paket (Manual WA) */}
+      {/* --- MAIN CONTENT (Overlapping) --- */}
+      <div className="max-w-4xl mx-auto px-4 -mt-10 space-y-6">
+        
+        {/* CARD SALDO */}
+        <div className="bg-white rounded-3xl p-6 shadow-xl flex justify-between items-center border border-gray-100">
+          <div>
+            <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">Sisa Credit</p>
+            <p className="text-4xl font-black text-gray-800">{userData?.credits || 0}</p>
+          </div>
+          <button 
+            onClick={handleBuyCredits} 
+            className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition flex items-center gap-2"
+          >
+            <Plus size={18}/> Top Up
+          </button>
+        </div>
+
+        {/* CARD MULAI UJIAN */}
+        <div className="bg-indigo-50 border border-indigo-100 rounded-3xl p-6 text-center">
+          <h3 className="font-bold text-indigo-900 mb-2 text-lg">Mulai Simulasi Baru</h3>
+          <p className="text-indigo-600/70 text-sm mb-6">Gunakan 1 credit untuk mendapatkan token ujian Tryout UTBK Fullset.</p>
+          
+          <button 
+            onClick={handleGenerateToken} 
+            disabled={isGenerating} 
+            className="w-full bg-white text-indigo-600 py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition flex items-center justify-center gap-2 border border-indigo-100"
+          >
+            {isGenerating ? <Loader2 className="animate-spin" size={20}/> : <Ticket size={20}/>}
+            {isGenerating ? 'Memproses...' : 'Generate Token'}
+          </button>
+        </div>
+
+        {/* CARD RIWAYAT */}
+        <div>
+          <h3 className="font-bold text-gray-700 mb-4 flex items-center gap-2 px-2">
+            <History size={20} className="text-gray-400"/> Riwayat Token
+          </h3>
+          
+          <div className="space-y-3">
+            {/* Placeholder jika kosong */}
+            {tokens.length === 0 && (
+              <div className="bg-white p-8 rounded-2xl border border-dashed border-gray-300 text-center text-gray-400 text-sm">
+                Belum ada riwayat ujian.
+              </div>
+            )}
+            
+            {/* Contoh Item Riwayat (Jika nanti ada data) */}
+            {tokens.map(t => (
+              <div key={t.id} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center">
+                <div>
+                  <div className="font-mono font-bold text-lg text-indigo-600">{t.tokenCode}</div>
+                  <div className="text-xs text-gray-400">{new Date(t.createdAt).toLocaleDateString()}</div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="p-2 border rounded-lg hover:bg-gray-50 text-gray-500"><Copy size={16}/></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* MODAL PAKET (Pop up WA) */}
       {showPackageModal && (
         <PackageSelection user={user} onClose={() => setShowPackageModal(false)} />
       )}
@@ -117,19 +168,17 @@ const Dashboard = ({ user }) => {
 };
 
 // ==========================================
-// 2. LANDING PAGE COMPONENT (Sesuai Request Kamu)
+// 2. LANDING PAGE COMPONENT (Tetap sama)
 // ==========================================
 const LandingPageContent = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState(null);
   const navigate = useNavigate();
 
-  // Navigation Handler
   const handleAuth = () => {
     navigate('/signup'); 
   };
 
-  // --- Data Configuration ---
   const features = [
     { icon: <Brain className="w-8 h-8" />, title: "Soal Berkualitas Tinggi", description: "Ribuan soal berkualitas yang disusun oleh tim expert sesuai kisi-kisi UTBK terbaru.", color: "from-blue-500 to-cyan-500" },
     { icon: <BarChart3 className="w-8 h-8" />, title: "Analisis Performa", description: "Setiap simulasi langsung dipecah: subtest lemah, waktu terbuang, dan potensi naik skor.", color: "from-purple-500 to-pink-500" },
@@ -170,7 +219,6 @@ const LandingPageContent = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      
       {/* Navigation Bar */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -179,7 +227,6 @@ const LandingPageContent = () => {
               <img src="/LogoRuangSimulasi.svg" alt="Logo Ruang Simulasi" className="w-20 h-20 md:w-28 md:h-28" />
             </div>
             
-            {/* Desktop Menu */}
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-gray-600 hover:text-indigo-600 font-medium transition">Fitur</a>
               <a href="#pricing" className="text-gray-600 hover:text-indigo-600 font-medium transition">Harga</a>
@@ -189,13 +236,11 @@ const LandingPageContent = () => {
               <button onClick={handleAuth} className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition">Mulai Gratis</button>
             </div>
             
-            {/* Mobile Menu Toggle */}
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 rounded-lg hover:bg-gray-100">
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
 
-          {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
             <div className="md:hidden py-4 space-y-3 border-t border-gray-100 bg-white absolute left-0 right-0 px-4 shadow-xl z-50">
               <a href="#features" className="block text-gray-600 hover:text-indigo-600 font-medium py-2">Fitur</a>
