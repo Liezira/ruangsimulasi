@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, onSnapshot, collection, query, where, orderBy, runTransaction, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, runTransaction, orderBy } from 'firebase/firestore';
 import { auth, db } from './firebase'; 
 
 // --- COMPONENTS ---
+// Pastikan nama file fisiknya sudah .jsx (SignUpPages.jsx & PackageSelection.jsx)
 import SignUpPages from './SignUpPages'; 
 import PackageSelection from './PackageSelection'; 
 
@@ -17,7 +18,7 @@ import {
 } from 'lucide-react';
 
 // ==========================================
-// 1. DASHBOARD COMPONENT (Desain Original)
+// 1. DASHBOARD COMPONENT (Desain Asli + Logo Gambar + Auto Token)
 // ==========================================
 const Dashboard = ({ user }) => {
   const [userData, setUserData] = useState(null);
@@ -35,15 +36,20 @@ const Dashboard = ({ user }) => {
     return () => unsub();
   }, [user]);
 
-  // 2. Ambil Riwayat Token
+  // 2. Ambil Riwayat Token (Fixed Logic)
   useEffect(() => {
     if (!user) return;
-    const q = query(
-      collection(db, 'tokens'), 
-      where('studentPhone', '==', user.email), // Asumsi sementara mapping via email/phone
-      orderBy('createdAt', 'desc')
-    );
-    // Note: Jika query error index, sementara skip dulu logic token list
+    // Query berdasarkan userId (lebih aman daripada email/phone)
+    const q = query(collection(db, 'tokens'), where('userId', '==', user.uid));
+    
+    const unsub = onSnapshot(q, (snapshot) => {
+      const loadedTokens = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+      // Sort manual di Client agar tidak perlu set Index Firestore dulu (mencegah error index)
+      loadedTokens.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setTokens(loadedTokens);
+    });
+    
+    return () => unsub();
   }, [user]);
 
   const handleLogout = async () => {
@@ -52,10 +58,9 @@ const Dashboard = ({ user }) => {
   };
 
   const handleGenerateToken = async () => {
-    // 1. Cek Saldo di State Lokal dulu (Biar cepat)
-    const currentCredits = userData?.credits || 0;
+    const credits = userData?.credits || 0;
     
-    if (currentCredits < 1) {
+    if (credits < 1) {
         alert("Credit tidak cukup! Silakan Top Up credit terlebih dahulu.");
         setShowPackageModal(true);
         return;
@@ -66,9 +71,8 @@ const Dashboard = ({ user }) => {
     setIsGenerating(true);
 
     try {
-      // MENGGUNAKAN TRANSACTION (Agar saldo kepotong & token kebuat secara bersamaan/aman)
+      // PROSES TRANSAKSI OTOMATIS
       await runTransaction(db, async (transaction) => {
-        // A. Baca data user terbaru dari database (untuk memastikan saldo valid)
         const userRef = doc(db, 'users', user.uid);
         const userDoc = await transaction.get(userRef);
         
@@ -79,35 +83,33 @@ const Dashboard = ({ user }) => {
           throw "Credit tidak cukup (transaksi dibatalkan).";
         }
 
-        // B. Siapkan Data Token Baru
-        // Generate kode acak 6 karakter (Misal: UTBK-X7Z9A)
+        // Generate Kode Token
         const randomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
         const tokenCode = `UTBK-${randomCode}`;
         const tokenRef = doc(db, 'tokens', tokenCode);
 
-        // C. Eksekusi: Potong Saldo & Simpan Token
         // 1. Potong Saldo User
         transaction.update(userRef, { 
           credits: latestCredits - 1,
-          generatedTokens: [...(userDoc.data().generatedTokens || []), tokenCode] // Simpan history di user juga
+          generatedTokens: [...(userDoc.data().generatedTokens || []), tokenCode] 
         });
 
-        // 2. Buat Token di Database
+        // 2. Buat Token Langsung Aktif
         transaction.set(tokenRef, {
           tokenCode: tokenCode,
           userId: user.uid,
           studentName: userDoc.data().displayName,
           studentSchool: userDoc.data().school,
           studentPhone: userDoc.data().phone || user.email,
-          status: 'active', // Token langsung aktif
+          status: 'active',
           score: null,
           createdAt: new Date().toISOString(),
-          isSent: true,     // Anggap sudah terkirim (karena lgsg muncul di dashboard siswa)
+          isSent: true, 
           sentMethod: 'DASHBOARD_GENERATE'
         });
       });
 
-      alert("Berhasil! Token ujian telah dibuat. Silakan cek di daftar Riwayat Token.");
+      alert("Berhasil! Token ujian telah dibuat. Cek di daftar Riwayat Token di bawah.");
       
     } catch (error) {
       console.error("Gagal generate:", error);
@@ -120,14 +122,18 @@ const Dashboard = ({ user }) => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
       
-      {/* --- HEADER MELENGKUNG (Desain Asli) --- */}
+      {/* --- HEADER MELENGKUNG --- */}
       <div className="bg-indigo-600 text-white p-8 pb-16 rounded-b-[2.5rem] shadow-xl">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              Halo, {userData?.displayName?.split(' ')[0] || 'Siswa'} 👋
-            </h1>
-            <p className="text-indigo-200 text-sm mt-1">Siap untuk tryout hari ini?</p>
+          <div className="flex items-center gap-3">
+             {/* LOGO GAMBAR DI DASHBOARD (SUDAH DIPERBAIKI) */}
+             <div className="bg-white p-1.5 rounded-lg shadow-sm">
+                <img src="/LogoRuangSimulasi.svg" alt="Logo" className="w-8 h-8" />
+             </div>
+             <div>
+                <h1 className="text-xl font-bold">Halo, {userData?.displayName?.split(' ')[0] || 'Siswa'} 👋</h1>
+                <p className="text-indigo-200 text-xs mt-0.5">Siap untuk tryout hari ini?</p>
+             </div>
           </div>
           <button 
             onClick={handleLogout} 
@@ -139,7 +145,7 @@ const Dashboard = ({ user }) => {
         </div>
       </div>
 
-      {/* --- MAIN CONTENT (Overlapping) --- */}
+      {/* --- MAIN CONTENT (Kartu Menumpuk) --- */}
       <div className="max-w-4xl mx-auto px-4 -mt-10 space-y-6">
         
         {/* CARD SALDO */}
@@ -149,7 +155,7 @@ const Dashboard = ({ user }) => {
             <p className="text-4xl font-black text-gray-800">{userData?.credits || 0}</p>
           </div>
           <button 
-            onClick={handleBuyCredits} 
+            onClick={() => setShowPackageModal(true)} 
             className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition flex items-center gap-2"
           >
             <Plus size={18}/> Top Up
@@ -167,7 +173,7 @@ const Dashboard = ({ user }) => {
             className="w-full bg-white text-indigo-600 py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition flex items-center justify-center gap-2 border border-indigo-100"
           >
             {isGenerating ? <Loader2 className="animate-spin" size={20}/> : <Ticket size={20}/>}
-            {isGenerating ? 'Memproses...' : 'Generate Token'}
+            {isGenerating ? 'Memproses...' : 'Generate Token (-1 Credit)'}
           </button>
         </div>
 
@@ -178,22 +184,25 @@ const Dashboard = ({ user }) => {
           </h3>
           
           <div className="space-y-3">
-            {/* Placeholder jika kosong */}
             {tokens.length === 0 && (
               <div className="bg-white p-8 rounded-2xl border border-dashed border-gray-300 text-center text-gray-400 text-sm">
-                Belum ada riwayat ujian.
+                Belum ada riwayat ujian. Klik Generate Token diatas.
               </div>
             )}
             
-            {/* Contoh Item Riwayat (Jika nanti ada data) */}
             {tokens.map(t => (
-              <div key={t.id} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center">
+              <div key={t.id} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center transition hover:shadow-md">
                 <div>
-                  <div className="font-mono font-bold text-lg text-indigo-600">{t.tokenCode}</div>
-                  <div className="text-xs text-gray-400">{new Date(t.createdAt).toLocaleDateString()}</div>
+                  <div className="font-mono font-bold text-lg text-indigo-600 tracking-wider">{t.tokenCode}</div>
+                  <div className="text-xs text-gray-400 mt-1">{new Date(t.createdAt).toLocaleString('id-ID')}</div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="p-2 border rounded-lg hover:bg-gray-50 text-gray-500"><Copy size={16}/></button>
+                  <button onClick={() => {navigator.clipboard.writeText(t.tokenCode); alert("Token disalin!")}} className="p-2 border rounded-lg hover:bg-gray-50 text-gray-500" title="Salin Token">
+                    <Copy size={16}/>
+                  </button>
+                  <span className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center ${t.status === 'used' ? 'bg-gray-100 text-gray-500' : 'bg-green-100 text-green-700'}`}>
+                    {t.status === 'used' ? 'Selesai' : 'Aktif'}
+                  </span>
                 </div>
               </div>
             ))}
@@ -202,7 +211,7 @@ const Dashboard = ({ user }) => {
 
       </div>
 
-      {/* MODAL PAKET (Pop up WA) */}
+      {/* MODAL PAKET */}
       {showPackageModal && (
         <PackageSelection user={user} onClose={() => setShowPackageModal(false)} />
       )}
@@ -211,7 +220,7 @@ const Dashboard = ({ user }) => {
 };
 
 // ==========================================
-// 2. LANDING PAGE COMPONENT (Tetap sama)
+// 2. LANDING PAGE COMPONENT (Original Kamu)
 // ==========================================
 const LandingPageContent = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -364,16 +373,7 @@ const LandingPageContent = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
             {packages.map((pkg, idx) => (
-              <div 
-                key={idx} 
-                className={`
-                  relative bg-white rounded-3xl p-6 md:p-8 border-2 transition-all duration-300
-                  ${pkg.popular 
-                    ? 'border-purple-300 shadow-xl md:shadow-2xl z-10 scale-100 md:scale-105 order-first md:order-none'
-                    : 'border-gray-200 shadow-lg hover:shadow-xl scale-100'
-                  }
-                `}
-              >
+              <div key={idx} className={`relative bg-white rounded-3xl p-6 md:p-8 border-2 transition-all duration-300 ${pkg.popular ? 'border-purple-300 shadow-xl md:shadow-2xl z-10 scale-100 md:scale-105 order-first md:order-none' : 'border-gray-200 shadow-lg hover:shadow-xl scale-100'}`}>
                 {pkg.popular && <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-3 py-1 md:px-4 md:py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs md:text-sm font-bold rounded-full shadow-lg whitespace-nowrap">⭐ PALING POPULER</div>}
                 
                 <div className={`w-12 h-12 bg-gradient-to-br ${pkg.color} rounded-xl flex items-center justify-center text-white mb-6 shadow-lg`}><Zap fill="currentColor" /></div>
