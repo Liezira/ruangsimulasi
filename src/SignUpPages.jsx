@@ -101,7 +101,7 @@ const AuthenticationScreen = ({ onAuthSuccess }) => {
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center p-4">
       <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl w-full max-w-md border border-white/20 shadow-2xl">
         <div className="text-center mb-8 text-white">
-          <div className="bg-indigo-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"><img src="/LogoRuangSimulasi.svg" alt="Logo Ruang Simulasi" size={32}/></div>
+          <img src="/LogoRuangSimulasi.svg" alt="Logo Ruang Simulasi" size={32}/>
           <h1 className="text-2xl font-bold">{mode === 'login' ? 'Selamat Datang' : 'Daftar Akun'}</h1>
           <p className="text-white/70 text-sm">Platform Simulasi UTBK Terpercaya</p>
         </div>

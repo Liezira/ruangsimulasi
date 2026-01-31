@@ -249,7 +249,7 @@ const LandingPageContent = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-12">
             <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-4"><div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center"><img src="/LogoRuangSimulasi.svg" alt="Logo Ruang Simulasi" className="w-20 h-20 md:w-28 md:h-28" /></div><span className="text-xl font-black text-white">RuangSimulasi</span></div>
+              <div className="flex items-center gap-3 mb-4"><img src="/LogoRuangSimulasi.svg" alt="Logo Ruang Simulasi" className="w-20 h-20 md:w-28 md:h-28" /><span className="text-xl font-black text-white">RuangSimulasi</span></div>
               <p className="text-gray-400 mb-6 leading-relaxed max-w-md">Platform simulasi UTBK terpercaya.</p>
               <div className="flex gap-4">
                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-indigo-600 transition"><Instagram size={20} /></a>
