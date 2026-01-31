@@ -321,8 +321,28 @@ const LandingPage = ({ onGetStarted, onLogin }) => {
                     </p>
                   )}
 
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-4xl font-black text-gray-900">Rp {pkg.price}</span>
+                  <div className="mb-3">
+                    {pkg.originalPrice && (
+                      <div className="text-sm text-gray-400 line-through mb-1">
+                        Rp {pkg.originalPrice}
+                      </div>
+                    )}
+
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-black text-gray-900">
+                        Rp {pkg.price}
+                      </span>
+
+                      {pkg.originalPrice && (
+                        <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-lg">
+                          Hemat {Math.round(
+                            ((parseInt(pkg.originalPrice.replace('.', '')) -
+                              parseInt(pkg.price.replace('.', ''))) /
+                              parseInt(pkg.originalPrice.replace('.', ''))) * 100
+                          )}%
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="text-lg font-bold text-indigo-600 mb-3">
@@ -348,7 +368,7 @@ const LandingPage = ({ onGetStarted, onLogin }) => {
                   onClick={onGetStarted}
                   className={`w-full py-3 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition bg-gradient-to-r ${pkg.color}`}
                 >
-                  Pilih Paket
+                  {pkg.popular ? 'Mulai Latihan Serius' : 'Pilih Paket'}
                 </button>
               </div>
             ))}
@@ -357,9 +377,6 @@ const LandingPage = ({ onGetStarted, onLogin }) => {
       </section>
 
       {/* TESTIMONIALS */}
-      <span className="inline-block text-xs font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full mb-3">
-        Pejuang UTBK
-      </span>
       <section id="testimonials" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -378,7 +395,9 @@ const LandingPage = ({ onGetStarted, onLogin }) => {
                   {[...Array(testi.rating)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" />
                   ))}
-                </div>
+                </div><span className="inline-block text-xs font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full mb-3">
+                  Pejuang UTBK
+                </span>
                 <p className="text-gray-700 mb-6 italic leading-relaxed">"{testi.text}"</p>
                 <div className="flex items-center gap-3">
                   <div className="text-4xl">{testi.avatar}</div>
