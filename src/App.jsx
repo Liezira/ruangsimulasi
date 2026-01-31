@@ -150,101 +150,24 @@ const Dashboard = ({ user }) => {
   const handleLogout = async () => { await signOut(auth); navigate('/'); };
 
   const handleGenerateToken = async () => {
-  const credits = userData?.credits || 0;
-  if (credits < 1) { 
-    alert("Credit tidak cukup!"); 
-    setShowPackageModal(true); 
-    return; 
-  }
-  
-  if (!confirm("Gunakan 1 Credit untuk generate token?")) return;
-  
-  setIsGenerating(true);
-  
-  try {
-    await runTransaction(db, async (transaction) => {
-      const userRef = doc(db, 'users', user.uid);
-      const userDoc = await transaction.get(userRef);
-      
-      // Validation
-      if (!userDoc.exists()) throw new Error("User tidak ditemukan");
-      
-      const currentCredits = userDoc.data().credits || 0;
-      if (currentCredits < 1) throw new Error("Credit tidak cukup");
-      
-      // 🔒 FIX #1: Generate token dengan timestamp (prevent collision)
-      const timestamp = Date.now().toString(36).toUpperCase();
-      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-      let tokenCode = `UTBK-${timestamp}-${random}`;
-      
-      // 🔒 FIX #2: Check uniqueness (loop max 5x)
-      let attempts = 0;
-      const maxAttempts = 5;
-      
-      while (attempts < maxAttempts) {
+    const credits = userData?.credits || 0;
+    if (credits < 1) { alert("Credit tidak cukup!"); setShowPackageModal(true); return; }
+    if (!confirm("Gunakan 1 Credit?")) return;
+    setIsGenerating(true);
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userRef = doc(db, 'users', user.uid);
+        const userDoc = await transaction.get(userRef);
+        if (!userDoc.exists() || (userDoc.data().credits || 0) < 1) throw "Credit tidak valid.";
+        const tokenCode = `UTBK-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
         const tokenRef = doc(db, 'tokens', tokenCode);
-        const tokenSnap = await transaction.get(tokenRef);
-        
-        if (!tokenSnap.exists()) {
-          // Token unique, proceed
-          break;
-        }
-        
-        // Token exists, regenerate
-        const newRandom = Math.random().toString(36).substring(2, 8).toUpperCase();
-        tokenCode = `UTBK-${timestamp}-${newRandom}`;
-        attempts++;
-        
-        console.warn(`[generateToken] Collision detected, attempt ${attempts}`);
-      }
-      
-      if (attempts >= maxAttempts) {
-        throw new Error("Gagal generate token unik, coba lagi");
-      }
-      
-      // 🔒 FIX #3: Prevent negative credits
-      const newCredits = currentCredits - 1;
-      if (newCredits < 0) {
-        throw new Error("Race condition detected, refresh dan coba lagi");
-      }
-      
-      // Update user
-      transaction.update(userRef, { 
-        credits: newCredits,
-        generatedTokens: [...(userDoc.data().generatedTokens || []), tokenCode],
-        lastTokenGenerated: new Date().toISOString()
+        transaction.update(userRef, { credits: (userDoc.data().credits || 0) - 1, generatedTokens: [...(userDoc.data().generatedTokens || []), tokenCode] });
+        transaction.set(tokenRef, { tokenCode, userId: user.uid, studentName: userDoc.data().displayName, studentSchool: userDoc.data().school, studentPhone: userDoc.data().phone || user.email, status: 'active', score: null, createdAt: new Date().toISOString(), isSent: true, sentMethod: 'DASHBOARD_GENERATE' });
       });
-      
-      // Create token
-      const tokenRef = doc(db, 'tokens', tokenCode);
-      transaction.set(tokenRef, { 
-        tokenCode,
-        userId: user.uid,
-        studentName: userDoc.data().displayName || 'Siswa',
-        studentSchool: userDoc.data().school || '-',
-        studentPhone: userDoc.data().phone || user.email,
-        status: 'active',
-        score: null,
-        createdAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
-        isSent: true,
-        sentMethod: 'DASHBOARD_GENERATE',
-        source: 'self_purchase' // Distinguish from admin-generated
-      });
-      
-      console.log(`[generateToken] Success: ${tokenCode}`);
-    });
-    
-    alert("✅ Token berhasil dibuat!");
-    
-  } catch (error) { 
-    console.error("[generateToken] Error:", error);
-    alert("❌ Gagal: " + (error.message || error)); 
-  } finally { 
-    setIsGenerating(false); 
-  }
-};
-  
+      alert("Token berhasil dibuat!");
+    } catch (error) { alert("Gagal: " + error); } finally { setIsGenerating(false); }
+  };
+
   // --- LOGIC LAUNCHER ---
   const handleOpenExamApp = (tokenCode) => {
     navigator.clipboard.writeText(tokenCode);
