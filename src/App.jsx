@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useSearchParams, useParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { onAuthStateChanged, signOut, sendEmailVerification, applyActionCode } from 'firebase/auth';
-import { doc, onSnapshot, collection, query, where, runTransaction, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, runTransaction } from 'firebase/firestore';
 import { auth, db } from './firebase'; 
 
 // --- COMPONENTS ---
@@ -90,9 +90,9 @@ const VerificationScreen = ({ user }) => {
       };
       await sendEmailVerification(user, actionCodeSettings);
       setSent(true);
-      alert("Email terkirim! JANGAN LUPA CEK FOLDER SPAM/JUNK.");
+      alert("Email terkirim! CEK FOLDER SPAM/JUNK.");
     } catch (e) {
-      alert("Terlalu sering meminta email. Tunggu beberapa saat.");
+      alert("Terlalu sering meminta email. Tunggu sebentar.");
     } finally {
       setLoading(false);
     }
@@ -148,84 +148,7 @@ const VerificationScreen = ({ user }) => {
 };
 
 // ==========================================
-// 3. HALAMAN DETAIL HASIL (BARU!)
-// ==========================================
-const ResultPage = () => {
-  const { tokenCode } = useParams();
-  const navigate = useNavigate();
-  const [resultData, setResultData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchResult = async () => {
-      try {
-        const docRef = doc(db, 'tokens', tokenCode);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          setResultData(docSnap.data());
-        } else {
-          alert("Data ujian tidak ditemukan");
-          navigate('/dashboard');
-        }
-      } catch (error) {
-        console.error("Error fetching result:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchResult();
-  }, [tokenCode, navigate]);
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-indigo-600 w-10 h-10"/></div>;
-
-  return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans">
-      <div className="max-w-2xl mx-auto">
-        <button onClick={() => navigate('/dashboard')} className="mb-6 flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition font-medium">
-          <ArrowRight className="rotate-180" size={20}/> Kembali ke Dashboard
-        </button>
-
-        <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-          
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Hasil Simulasi UTBK</h1>
-          <p className="text-gray-500 mb-8 font-mono bg-gray-100 inline-block px-3 py-1 rounded-lg text-sm">{resultData?.tokenCode}</p>
-
-          <div className="flex justify-center items-center mb-8">
-            <div className="relative">
-              <div className="w-40 h-40 rounded-full border-8 border-indigo-100 flex items-center justify-center bg-white shadow-inner">
-                <div>
-                  <span className="block text-5xl font-black text-indigo-600">{resultData?.score || 0}</span>
-                  <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Skor Akhir</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
-              <p className="text-green-600 text-xs font-bold uppercase">Benar</p>
-              <p className="text-2xl font-black text-green-700">{resultData?.correctAnswers || 0}</p>
-            </div>
-            <div className="bg-red-50 p-4 rounded-2xl border border-red-100">
-              <p className="text-red-600 text-xs font-bold uppercase">Salah/Kosong</p>
-              <p className="text-2xl font-black text-red-700">{resultData?.wrongAnswers || 0}</p>
-            </div>
-          </div>
-
-          <div className="bg-indigo-50 rounded-xl p-4 text-sm text-indigo-800 text-left leading-relaxed">
-            <strong>Catatan:</strong><br/>
-            Teruslah berlatih! Analisis detail per subtes akan segera tersedia di update berikutnya.
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ==========================================
-// 4. DASHBOARD COMPONENT (UPDATE SKOR)
+// 3. DASHBOARD COMPONENT (LAUNCHER MODE)
 // ==========================================
 const Dashboard = ({ user }) => {
   if (!user.emailVerified) {
@@ -237,6 +160,8 @@ const Dashboard = ({ user }) => {
   const [showPackageModal, setShowPackageModal] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
+  
+  // URL Web Ujian (Student App)
   const EXAM_URL = "https://utbk-simulation-tester-student.vercel.app";
 
   useEffect(() => {
@@ -266,7 +191,7 @@ const Dashboard = ({ user }) => {
   const handleGenerateToken = async () => {
     const credits = userData?.credits || 0;
     if (credits < 1) {
-        alert("Credit tidak cukup! Silakan Top Up credit terlebih dahulu.");
+        alert("Credit tidak cukup! Silakan Top Up.");
         setShowPackageModal(true);
         return;
     }
@@ -276,16 +201,17 @@ const Dashboard = ({ user }) => {
       await runTransaction(db, async (transaction) => {
         const userRef = doc(db, 'users', user.uid);
         const userDoc = await transaction.get(userRef);
-        if (!userDoc.exists()) throw "User tidak ditemukan!";
-        const latestCredits = userDoc.data().credits || 0;
-        if (latestCredits < 1) throw "Credit tidak cukup.";
+        if (!userDoc.exists() || (userDoc.data().credits || 0) < 1) throw "Credit tidak cukup.";
+        
         const randomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
         const tokenCode = `UTBK-${randomCode}`;
         const tokenRef = doc(db, 'tokens', tokenCode);
+        
         transaction.update(userRef, { 
-          credits: latestCredits - 1,
+          credits: (userDoc.data().credits || 0) - 1,
           generatedTokens: [...(userDoc.data().generatedTokens || []), tokenCode] 
         });
+        
         transaction.set(tokenRef, {
           tokenCode: tokenCode,
           userId: user.uid,
@@ -301,14 +227,19 @@ const Dashboard = ({ user }) => {
       });
       alert("Token berhasil dibuat!");
     } catch (error) {
-      alert("Gagal membuat token: " + error);
+      alert("Gagal: " + error);
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleStartExam = (tokenCode) => {
+  // --- LOGIC: Buka Web Ujian & Auto Fill Token ---
+  const handleOpenExamApp = (tokenCode) => {
+    // 1. Copy Token ke Clipboard (Cadangan)
     navigator.clipboard.writeText(tokenCode);
+    
+    // 2. Redirect ke Web Ujian dengan Parameter Token
+    // Web ujian akan membaca ?token=... dan otomatis memprosesnya
     window.open(`${EXAM_URL}?token=${tokenCode}`, '_blank');
   };
   
@@ -352,7 +283,7 @@ const Dashboard = ({ user }) => {
                   <div className="font-mono font-bold text-lg text-indigo-600 tracking-wider">{t.tokenCode}</div>
                   <div className="text-xs text-gray-400 mt-1">{new Date(t.createdAt).toLocaleString('id-ID')}</div>
                   
-                  {/* 🔥 INI DIA LOGIC SKOR YANG HILANG DI KODEMU SEBELUMNYA */}
+                  {/* Badge Skor jika Selesai */}
                   {t.score !== null && t.score !== undefined && (
                     <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold">
                       <Trophy size={12}/> Skor: {t.score}
@@ -363,17 +294,17 @@ const Dashboard = ({ user }) => {
                 <div className="flex items-center gap-2 w-full md:w-auto">
                   <button onClick={() => {navigator.clipboard.writeText(t.tokenCode); alert("Token disalin!")}} className="p-2 border rounded-lg hover:bg-gray-50 text-gray-500" title="Salin Token"><Copy size={18}/></button>
                   
-                  {/* 🔥 TOMBOL BERUBAH JIKA SUDAH ADA SKOR */}
+                  {/* LOGIKA TOMBOL: Keduanya membuka Web Ujian dengan parameter Token */}
                   {t.score !== null && t.score !== undefined ? (
                     <button 
-                      onClick={() => navigate(`/results/${t.tokenCode}`)}
+                      onClick={() => handleOpenExamApp(t.tokenCode)}
                       className="flex-1 md:flex-none px-4 py-2 bg-white border-2 border-indigo-100 text-indigo-600 rounded-lg font-bold text-sm hover:bg-indigo-50 transition flex items-center justify-center gap-2"
                     >
-                      Lihat Hasil <ArrowRight size={14}/>
+                      Lihat Hasil <ExternalLink size={14}/>
                     </button>
                   ) : (
                     <button 
-                      onClick={() => handleStartExam(t.tokenCode)}
+                      onClick={() => handleOpenExamApp(t.tokenCode)}
                       className="flex-1 md:flex-none px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-bold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition flex items-center justify-center gap-2"
                     >
                       Mulai Ujian <ExternalLink size={14}/>
@@ -391,7 +322,7 @@ const Dashboard = ({ user }) => {
 };
 
 // ==========================================
-// 5. LANDING PAGE COMPONENT
+// 4. LANDING PAGE COMPONENT
 // ==========================================
 const LandingPageContent = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -464,7 +395,7 @@ const LandingPageContent = () => {
 };
 
 // ==========================================
-// 6. MAIN APP ROUTER & AUTH CHECKER (AUTO LOGOUT)
+// 5. MAIN APP ROUTER & AUTH CHECKER (AUTO LOGOUT)
 // ==========================================
 function App() {
   const [user, setUser] = useState(null);
@@ -510,8 +441,6 @@ function App() {
         <Route path="/signup" element={!user ? <SignUpPages /> : <Navigate to="/dashboard" />} />
         <Route path="/dashboard" element={user ? <Dashboard user={user} /> : <Navigate to="/signup" />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
-        {/* 🔥 ROUTE UNTUK HALAMAN HASIL (Sudah Ditambahkan) */}
-        <Route path="/results/:tokenCode" element={<ResultPage />} />
       </Routes>
     </Router>
   );
