@@ -72,7 +72,7 @@ const LandingPageContent = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <img src="/LogoRuangSimulasi.svg" alt="Logo Ruang Simulasi" className="w-28 h-28" />
+              <img src="/LogoRuangSimulasi.svg" alt="Logo Ruang Simulasi" className="w-20 h-20 md:w-28 md:h-28" />
             </div>
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-gray-600 hover:text-indigo-600 font-medium transition">Fitur</a>
@@ -100,7 +100,8 @@ const LandingPageContent = () => {
       </nav>
 
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-20 md:py-32">
+      {/* Perubahan: Padding vertikal lebih kecil di mobile */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-16 md:py-32">
         <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-300/20 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -114,10 +115,12 @@ const LandingPageContent = () => {
             </h1>
             <p className="text-lg md:text-xl mb-10 opacity-90">UTBK cuma sekali. Persiapannya jangan coba-coba. Satu simulasi bisa mengubah strategi belajarmu.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button onClick={handleAuth} className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-lg shadow-2xl hover:shadow-indigo-300 transform hover:-translate-y-1 transition flex items-center gap-2 group">
+              {/* Perubahan: Padding tombol lebih kecil di mobile */}
+              <button onClick={handleAuth} className="px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-lg shadow-2xl hover:shadow-indigo-300 transform hover:-translate-y-1 transition flex items-center gap-2 group">
                 Daftar Sekarang - Gratis <ArrowRight className="group-hover:translate-x-1 transition" />
               </button>
-              <button onClick={handleAuth} className="px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl border-2 border-indigo-200 transform hover:-translate-y-1 transition">Sudah Punya Akun?</button>
+              {/* Perubahan: Padding tombol lebih kecil di mobile */}
+              <button onClick={handleAuth} className="px-6 py-3 md:px-8 md:py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl border-2 border-indigo-200 transform hover:-translate-y-1 transition">Sudah Punya Akun?</button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16">
               {stats.map((stat, idx) => (
@@ -133,7 +136,8 @@ const LandingPageContent = () => {
       </section>
 
       {/* FEATURES */}
-      <section id="features" className="py-20 bg-white">
+      {/* Perubahan: Padding vertikal section lebih kecil di mobile */}
+      <section id="features" className="py-16 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-4">Kenapa Pilih <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Kami?</span></h2>
@@ -152,7 +156,8 @@ const LandingPageContent = () => {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-20 bg-gradient-to-br from-gray-50 to-indigo-50">
+      {/* Perubahan: Padding vertikal section lebih kecil di mobile */}
+      <section id="pricing" className="py-16 md:py-20 bg-gradient-to-br from-gray-50 to-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-4">Paket <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Terjangkau</span></h2>
@@ -161,8 +166,10 @@ const LandingPageContent = () => {
           </div>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {packages.map((pkg, idx) => (
-              <div key={idx} className={`relative bg-white rounded-3xl p-8 border-2 ${pkg.popular ? 'border-purple-300 shadow-2xl scale-105' : 'border-gray-200 shadow-lg'} hover:shadow-2xl transition-all duration-300`}>
-                {pkg.popular && <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-bold rounded-full shadow-lg">⭐ PALING POPULER</div>}
+              /* Perubahan: Padding dalam card lebih kecil di mobile (p-6 md:p-8) */
+              <div key={idx} className={`relative bg-white rounded-3xl p-6 md:p-8 border-2 ${pkg.popular ? 'border-purple-300 shadow-2xl scale-105' : 'border-gray-200 shadow-lg'} hover:shadow-2xl transition-all duration-300`}>
+                {/* Perubahan: Ukuran badge lebih kecil di mobile */}
+                {pkg.popular && <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-3 py-1 md:px-4 md:py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs md:text-sm font-bold rounded-full shadow-lg">⭐ PALING POPULER</div>}
                 <div className={`w-12 h-12 bg-gradient-to-br ${pkg.color} rounded-xl flex items-center justify-center text-white mb-6 shadow-lg`}><Zap fill="currentColor" /></div>
                 <h3 className="text-2xl font-black text-gray-900 mb-1">{pkg.name}</h3>
                 {pkg.popular && <p className="text-sm text-gray-500 mb-4">{pkg.subtitle}</p>}
@@ -188,7 +195,8 @@ const LandingPageContent = () => {
       </section>
 
       {/* TESTIMONIALS & FAQ */}
-      <section id="testimonials" className="py-20 bg-white">
+      {/* Perubahan: Padding vertikal section lebih kecil di mobile */}
+      <section id="testimonials" className="py-16 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-4">Apa Kata <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Mereka?</span></h2></div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -204,7 +212,8 @@ const LandingPageContent = () => {
         </div>
       </section>
 
-      <section id="faq" className="py-20 bg-gradient-to-br from-indigo-50 to-purple-50">
+      {/* Perubahan: Padding vertikal section lebih kecil di mobile */}
+      <section id="faq" className="py-16 md:py-20 bg-gradient-to-br from-indigo-50 to-purple-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-4">Pertanyaan <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Umum</span></h2></div>
           <div className="space-y-4">
@@ -222,22 +231,25 @@ const LandingPageContent = () => {
       </section>
 
       {/* CTA & FOOTER */}
-      <section className="py-20 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 relative overflow-hidden">
+      {/* Perubahan: Padding vertikal section lebih kecil di mobile */}
+      <section className="py-16 md:py-20 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <h2 className="text-3xl md:text-5xl font-black mb-6">Siap Raih Skor Terbaikmu?</h2>
           <p className="text-lg md:text-xl mb-10 opacity-90">Bergabunglah dengan ribuan siswa yang sudah merasakan manfaatnya.</p>
-          <button onClick={handleAuth} className="px-10 py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg shadow-2xl hover:shadow-white/20 transform hover:-translate-y-1 transition inline-flex items-center gap-3 group">
+          {/* Perubahan: Padding tombol CTA lebih kecil di mobile */}
+          <button onClick={handleAuth} className="px-6 py-3 md:px-10 md:py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg shadow-2xl hover:shadow-white/20 transform hover:-translate-y-1 transition inline-flex items-center gap-3 group">
             Daftar Gratis Sekarang <ArrowRight className="group-hover:translate-x-1 transition" />
           </button>
         </div>
       </section>
 
-      <footer className="bg-gray-900 text-gray-300 py-16">
+      {/* Perubahan: Padding vertikal footer lebih kecil di mobile */}
+      <footer className="bg-gray-900 text-gray-300 py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-12">
             <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-4"><div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center"><Brain className="w-6 h-6 text-white" /></div><span className="text-xl font-black text-white">RuangSimulasi</span></div>
+              <div className="flex items-center gap-3 mb-4"><div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center"><img src="/LogoRuangSimulasi.svg" alt="Logo Ruang Simulasi" className="w-20 h-20 md:w-28 md:h-28" /></div><span className="text-xl font-black text-white">RuangSimulasi</span></div>
               <p className="text-gray-400 mb-6 leading-relaxed max-w-md">Platform simulasi UTBK terpercaya.</p>
               <div className="flex gap-4">
                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-indigo-600 transition"><Instagram size={20} /></a>
