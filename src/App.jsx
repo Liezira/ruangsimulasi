@@ -260,7 +260,7 @@ const LandingPageContent = () => {
           <div className="grid md:grid-cols-4 gap-8 mb-12">
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-4">
-                <img src="/LogoRuangSimulasi.svg" alt="Logo Ruang Simulasi" className="w-20 h-20 md:w-28 md:h-28">
+                <img src="/LogoRuangSimulasi.svg" alt="Logo Ruang Simulasi" className="w-20 h-20 md:w-28 md:h-28"></img>
                 <span className="text-xl font-black text-white">RuangSimulasi</span>
               </div>
               <p className="text-gray-400 mb-6 leading-relaxed max-w-md text-sm md:text-base">Platform simulasi UTBK terpercaya yang membantu ribuan siswa mencapai skor impian mereka.</p>
