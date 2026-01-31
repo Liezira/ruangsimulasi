@@ -125,13 +125,23 @@ const Dashboard = ({ user }) => {
       {/* --- HEADER MELENGKUNG --- */}
       <div className="bg-indigo-600 text-white p-8 pb-16 rounded-b-[2.5rem] shadow-xl">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-                <img src="/LogoRuangSimulasi.svg" alt="Logo" className="w-8 h-8" /></img>
+          
+          <div className="flex items-center gap-4">
+             {/* KOTAK PUTIH DIHAPUS, TAPI LOGO TETAP ADA */}
+             <img 
+               src="/LogoRuangSimulasi.svg" 
+               alt="Logo" 
+               className="w-14 h-14 object-contain drop-shadow-lg" 
+             />
+             
              <div>
-                <h1 className="text-xl font-bold">Halo, {userData?.displayName?.split(' ')[0] || 'Siswa'} 👋</h1>
-                <p className="text-indigo-200 text-xs mt-0.5">Siap untuk tryout hari ini?</p>
+                <h1 className="text-2xl font-bold">
+                  Halo, {userData?.displayName?.split(' ')[0] || 'Siswa'} 👋
+                </h1>
+                <p className="text-indigo-200 text-sm mt-1">Siap untuk simulasi hari ini?</p>
              </div>
           </div>
+
           <button 
             onClick={handleLogout} 
             className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition text-white"
@@ -141,7 +151,7 @@ const Dashboard = ({ user }) => {
           </button>
         </div>
       </div>
-
+      
       {/* --- MAIN CONTENT (Kartu Menumpuk) --- */}
       <div className="max-w-4xl mx-auto px-4 -mt-10 space-y-6">
         
