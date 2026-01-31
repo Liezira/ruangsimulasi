@@ -65,9 +65,9 @@ const packages = [
     name: 'Paket Sultan',
     subtitle: 'Paling hemat untuk pejuang serius',
     credits: 10,
-    price: 85000,
+    price: 75000,
     originalPrice: 100000,
-    pricePerToken: 8500,
+    pricePerToken: 7500,
     description: '10 Token untuk persiapan maksimal',
     highlight: 'Lebih hemat dibanding beli satuan',
     features: [

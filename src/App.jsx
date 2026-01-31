@@ -334,17 +334,17 @@ const LandingPage = ({ onGetStarted, onLogin }) => {
                       </span>
 
                       {pkg.originalPrice && (
-                        <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-lg">
+                        <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-lg">
                           Hemat {Math.round(
-                            ((parseInt(pkg.originalPrice.replace('.', '')) -
-                              parseInt(pkg.price.replace('.', ''))) /
-                              parseInt(pkg.originalPrice.replace('.', ''))) * 100
+                            ((Number(pkg.originalPrice.replace('.', '')) -
+                              Number(pkg.price.replace('.', ''))) /
+                              Number(pkg.originalPrice.replace('.', ''))) * 100
                           )}%
                         </span>
                       )}
                     </div>
                   </div>
-
+                  
                   <div className="text-lg font-bold text-indigo-600 mb-3">
                     {pkg.credits} Credits
                   </div>
