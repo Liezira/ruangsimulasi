@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useSearc
 import { onAuthStateChanged, signOut, sendEmailVerification, applyActionCode } from 'firebase/auth';
 import { doc, onSnapshot, collection, query, where, runTransaction } from 'firebase/firestore';
 import { auth, db } from './firebase'; 
+import { getApp } from 'firebase/app';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 
 // --- COMPONENTS ---
 import SignUpPages from './SignUpPages'; 
@@ -168,7 +170,6 @@ const Dashboard = ({ user }) => {
     } catch (error) { alert("Gagal: " + error); } finally { setIsGenerating(false); }
   };
 
-  // --- LOGIC LAUNCHER ---
   const handleOpenExamApp = (tokenCode) => {
     navigator.clipboard.writeText(tokenCode);
     window.open(`${EXAM_URL}?token=${tokenCode}`, '_blank');
@@ -204,14 +205,12 @@ const Dashboard = ({ user }) => {
                 <div className="text-center md:text-left">
                   <div className="font-mono font-bold text-lg text-indigo-600 tracking-wider">{t.tokenCode}</div>
                   <div className="text-xs text-gray-400 mt-1">{new Date(t.createdAt).toLocaleString('id-ID')}</div>
-                  {/* TAMPILAN SKOR DI SINI */}
                   {t.score !== null && t.score !== undefined && (
                     <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold"><Trophy size={12}/> Skor: {t.score}</div>
                   )}
                 </div>
                 <div className="flex items-center gap-2 w-full md:w-auto">
                   <button onClick={() => {navigator.clipboard.writeText(t.tokenCode); alert("Token disalin!")}} className="p-2 border rounded-lg hover:bg-gray-50 text-gray-500" title="Salin Token"><Copy size={18}/></button>
-                  {/* LOGIKA TOMBOL LAUNCHER */}
                   {t.score !== null && t.score !== undefined ? (
                     <button onClick={() => handleOpenExamApp(t.tokenCode)} className="flex-1 md:flex-none px-4 py-2 bg-white border-2 border-indigo-100 text-indigo-600 rounded-lg font-bold text-sm hover:bg-indigo-50 transition flex items-center justify-center gap-2">Lihat Hasil <ExternalLink size={14}/></button>
                   ) : (
@@ -229,7 +228,7 @@ const Dashboard = ({ user }) => {
 };
 
 // ==========================================
-// 4. LANDING PAGE COMPONENT (FULL CONTENT RESTORED)
+// 4. LANDING PAGE COMPONENT
 // ==========================================
 const LandingPageContent = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -385,23 +384,49 @@ const LandingPageContent = () => {
 };
 
 // ==========================================
-// 5. MAIN APP ROUTER & AUTH CHECKER (AUTO LOGOUT ADDED)
+// 5. MAIN APP ROUTER & AUTH CHECKER (FIXED STRUCTURE)
 // ==========================================
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // --- LOGIC AUTO LOGOUT (30 MENIT) ---
+  // --- 1. INISIALISASI APP CHECK (DDoS Protection) ---
+  useEffect(() => {
+    const initAppCheck = async () => {
+      try {
+        const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY; 
+        if (siteKey) {
+          if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+            window.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+          }
+          
+          const app = getApp(); 
+          initializeAppCheck(app, { 
+            provider: new ReCaptchaV3Provider(siteKey), 
+            isTokenAutoRefreshEnabled: true 
+          });
+          
+          console.log("🛡️ Security: App Check Dashboard Active");
+        }
+      } catch (error) {
+        console.error("App Check init failed:", error);
+      }
+    };
+    initAppCheck();
+  }, []);
+
+  // --- 2. LOGIC AUTO LOGOUT ---
   const handleUserActivity = useCallback(() => {
     clearTimeout(window.inactivityTimer);
     if (auth.currentUser) {
       window.inactivityTimer = setTimeout(() => {
         alert("Sesi berakhir karena tidak aktif selama 30 menit.");
         signOut(auth);
-      }, 30 * 60 * 1000); // 30 Menit
+      }, 30 * 60 * 1000); 
     }
   }, []);
 
+  // --- 3. AUTH LISTENER & ACTIVITY TRACKING ---
   useEffect(() => {
     window.addEventListener('mousemove', handleUserActivity);
     window.addEventListener('keydown', handleUserActivity);
